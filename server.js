@@ -1,84 +1,59 @@
-// import libraries
-let exp = require('express');     // to set up an express app
-let jwt = require('express-jwt'); // for authentication with Auth0 JWT's
-let bp  = require('body-parser'); // for parsing JSON in request bodies
-let mng = require('mongoose');    // for interacting with MongoDB
+//app.js
+const express = require('express');
+const logger = require('morgan');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const path = require('path');
+const cors = require('cors');
+const passport = require('passport');
+const mongoose = require('mongoose');
 
-// import Error classes
-// NOTE: UnauthorizedError is built into express-jwt
-let BadRequestError    = require('./errors/bad-request');
-let ForbiddenError     = require('./errors/forbidden');
-let RouteNotFoundError = require('./errors/route-not-found');
+const userRouter = require('./routes/user');
+const wikiRouter = require('./routes/wiki');
 
-// load environment variables
-require('dotenv').config();
+var mongoDB = "mongodb://localhost:27017/MyDb";
+mongoose.connect(mongoDB, { useNewUrlParser: true});
+mongoose.Promise = global.Promise;
+var db = mongoose.connection;
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.on('connect', () => {
+  console.log('connected to mongo database')
+});
 
-// connect to MongoDB
-mng.Promise = global.Promise;
-mng.connect('mongodb://localhost:27017/vro', { useNewUrlParser: true});
+const app = express();
+app.use(logger('dev'));
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(cors());
+app.use(passport.initialize());
+app.use(passport.session());
+require('./config/passport')(passport)
 
-// import model
-let UserProfile = require('./models/userProfile');
+app.use('/', wikiRouter);
+// route users
+app.use('/users', userRouter);
+// route events
 
-// initialize app
-let app = exp();
-
-/**
- * Preflight Middleware
- */
-// CORS
+// catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  next();
+  var err = new Error('Not Found');
+  err.status = 404;
+  next(err);
 });
 
-// auth0 JWT; reject requests that aren't authorized
-// client ID and secret should be stored in a .env file
-//app.use(jwt({
-//  secret: process.env.AUTH0_SECRET,
-//  audience: process.env.AUTH0_ID
-//}));
-// TODO: Uncomment above when you get auth0 working
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-// parse JSON in the body of requests
-app.use(bp.json());
-
-/**
- * Routes
- */
-let routes = require('./routes');
-routes(app);
-
-/**
- * Postflight Middleware
- */
-// handle 404's
-app.use((req, res, next) => {
-  next(new RouteNotFoundError(`You have tried to access an API endpoint ({req.url}) that does not exist.`));
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
 });
 
-// handle errors (404 is not technically an error)
-app.use((err, req, res, next) => {
-  switch(err.name) {
-    case 'BadRequestError':
-      res.status(400).json({ name: err.name, message: err.message });
-      break;
-    case 'UnauthorizedError':
-      res.status(401).json(err);
-      break;
-    case 'ForbiddenError':
-      res.status(403).json({ name: err.name, message: err.message });
-      break;
-    case 'RouteNotFoundError':
-      res.status(404).json({ name: err.name, message: err.message });
-      break;
-    default:
-      res.status(400).json({ name: err.name, message: err.message });
-  }
-});
-
-// start server
-app.listen(8080, () => {
-  console.log('Vro API listening on port 8080!');
+let port = 8080;
+app.listen(port, () => {
+    console.log('Server is up and running on port number ' + port);
 });

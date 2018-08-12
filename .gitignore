@@ -71,3 +71,6 @@ typings/
 
 # Serverless directories
 .serverless
+
+# local settings
+local_settings.js
