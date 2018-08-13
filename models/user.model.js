@@ -2,10 +2,10 @@ let mongoose = require('mongoose');
 const bcrypt = require('bcrypt')
 let Schema = mongoose.Schema;
 let UserSchema = new Schema({
-    name: { type: String, required: [true, 'Each user must have a name'] },
-    email: { type: String, required: [true, 'Each user must have an email'] },
-    username: { type: String, required: [true, 'Each user must have a username'] },
-    password: {type: String, required: [true, 'Each user needs a password']}
+    email: { type: String, index: {unique: true}, required: [true, 'Each user must have an email'] },
+    username: { type: String, index: {unique: true}, required: [true, 'Each user must have a username'] },
+    password: {type: String, required: [true, 'Each user needs a password'] },
+    photoUrl: {type: String}
 }, {
     timestamps: true,  // adds createdAt and updatedAt fields
     minimize: false
