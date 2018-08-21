@@ -4,6 +4,7 @@ const config = require('../config/jwt')
 
 
 /* GET get all users */
+// TODO (Lucas Wotton): Fix this function it throws an error
 exports.all_users_get = function(req, res) {
   User.find({}, 'username')
     .populate('username')
@@ -28,7 +29,7 @@ exports.register_user_post = function(req, res) {
     if (err) {
       res.json({success: false, msg: 'Failed to register user fuck!'})
     } else {
-      res.json(({success: true, msg: 'Registered user'}))
+      res.json({success: true, msg: 'Registered user with id ' + user._id})
     }
   })
 }
@@ -44,7 +45,7 @@ exports.authenticate_user_post = function(req, res) {
     }
 
     if (!user) {
-      res.json(({success: false, msg: 'User not found bruh'}))
+      res.json({success: false, msg: 'User not found bruh'})
     }
 
     User.comparePassword(password, user.password, (err, isMatch) => {
