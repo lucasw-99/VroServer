@@ -12,7 +12,28 @@ module.exports.User = function User(username, password, email, photoUrl, id=null
 }
 
 module.exports.getUserById = function(userId, callback) {
-  User.findById(userId, callback)
+  findUserQuery = "SELECT * FROM USERS WHERE id = ?"
+  console.log('userId:', userId)
+  values = [userId]
+  db.getConnection(global.SQLpool, (err, connection) => {
+    if (err) {
+      callback(err)
+    } else {
+      connection.query(findUserQuery, values, function(err, results, fields) {
+        if (err) {
+          callback(err)
+        } else if (results.length === 0) {
+          callback({ message: "No user with id " + id + " was found. User might have been deleted, and this is an old JWT." })
+        } else {
+          console.log(results)
+          user = results[0]
+          // TODO (Lucas Wotton): Find out why new User doesn't work. For now user works LOL
+          callback(null, user)
+        }
+        connection.release()
+      })
+    }
+  })
 }
 
 module.exports.getUserByUsername = function(username, callback) {
@@ -25,6 +46,8 @@ module.exports.getUserByUsername = function(username, callback) {
       connection.query(findUserQuery, values, function(err, results, fields) {
         if (err) {
           callback(err)
+        } else if (results.length === 0) {
+          callback({ message: "No user with username " + username + " was found." })
         } else {
           user = results[0]
           // TODO (Lucas Wotton): Find out why new User doesn't work. For now user works LOL
