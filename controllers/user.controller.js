@@ -3,33 +3,20 @@ const jwt = require('jsonwebtoken')
 const config = require('../config/jwt')
 
 
-/* GET get all users */
-// TODO (Lucas Wotton): Fix this function it throws an error
-exports.all_users_get = function(req, res) {
-  User.find({}, 'username')
-    .populate('username')
-    .exec(function(err, list_users) {
-      if (err) {
-        return next(err)
-      }
-      res.status(200).send(list_users)
-    })
-}
-
 /* POST register user */
 exports.register_user_post = function(req, res) {
-  const newUser = new User({
-    name: req.body.name,
-    email: req.body.email,
-    username: req.body.username,
-    password: req.body.password 
-  })
-
+  username = req.body.username
+  password = req.body.password
+  email = req.body.email
+  // TODO (Lucas Wotton): Add default photoUrl?
+  photoUrl = null
+  const newUser = new User.User(username, password, email, photoUrl)
   User.addUser(newUser, (err, user) => {
     if (err) {
-      res.json({success: false, msg: 'Failed to register user fuck!'})
+      console.log(err)
+      res.json({success: false, msg: err})
     } else {
-      res.json({success: true, msg: 'Registered user with id ' + user._id})
+      res.json({success: true, msg: 'Registered user with username ' + user.username})
     }
   })
 }
@@ -54,16 +41,14 @@ exports.authenticate_user_post = function(req, res) {
       }
 
       if (isMatch) {
-        const token = jwt.sign(user.toJSON(), config.secret, {
-          expiresIn: 604800
-        })
+        console.log(user)
+        const token = jwt.sign(JSON.stringify(user), config.secret, {})
 
         res.json({
           success: true,
           token: 'JWT ' + token,
           user: {
-            id: user._id,
-            name: user.name,
+            id: user.id,
             username: user.username,
             email: user.email
           }

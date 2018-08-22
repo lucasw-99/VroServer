@@ -18,7 +18,7 @@ if (global.SQLpool === undefined) {
   global.SQLpool = db.createPool()
 }
 const init = require('./config/init_tables.js')
-init.createUserTable()
+init.initTables()
 
 const app = express()
 app.use(logger('dev'))
@@ -51,7 +51,9 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500)
-  res.send('Invalid request')
+  console.log(err)
+  // TODO (Lucas Wotton): Change this when not in dev
+  res.send(err.message)
 })
 
 let port = 8080;

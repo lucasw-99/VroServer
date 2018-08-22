@@ -1,4 +1,4 @@
-# Logs
+ Logs
 logs
 *.log
 npm-debug.log*
@@ -74,3 +74,6 @@ typings/
 
 # local settings
 local_settings.js
+
+# swp files
+*.swp

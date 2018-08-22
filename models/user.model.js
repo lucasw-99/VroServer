@@ -1,35 +1,39 @@
-let mongoose = require('mongoose');
-var bcrypt = require('bcryptjs')
-let Schema = mongoose.Schema;
-let UserSchema = new Schema({
-    email: { type: String, index: {unique: true}, required: [true, 'Each user must have an email'] },
-    username: { type: String, index: {unique: true}, required: [true, 'Each user must have a username'] },
-    password: {type: String, required: [true, 'Each user needs a password'] },
-    photoUrl: {type: String},
-    followerIds: { type: Array, "default": [], index: { unique: true }},
-    followingIds: { type: Array, "default": [], index: { unique: true }}
-}, {
-    timestamps: true,  // adds createdAt and updatedAt fields
-    minimize: false
-});
+const bcrypt = require('bcryptjs')
+const db = require('./db')
 
-// TODO (Lucas Wotton): Unused?
-// Virtual for author's URL
-UserSchema
-.virtual('url')
-.get(function () {
-  return '/users/' + this._id;
-});
+const sqlerrors = require('../errors/sql-errors')
 
-const User = module.exports = mongoose.model('User', UserSchema)
+module.exports.User = function User(username, password, email, photoUrl, id=null) {
+  this.username = username
+  this.password = password
+  this.email = email
+  this.photoUrl = photoUrl
+  this.id = id
+}
 
 module.exports.getUserById = function(userId, callback) {
   User.findById(userId, callback)
 }
 
 module.exports.getUserByUsername = function(username, callback) {
-  const query = { username: username }
-  User.findOne(query, callback)
+  findUserQuery = "SELECT * FROM USERS WHERE username = ?"
+  values = [username]
+  db.getConnection(global.SQLpool, (err, connection) => {
+    if (err) {
+      callback(err)
+    } else {
+      connection.query(findUserQuery, values, function(err, results, fields) {
+        if (err) {
+          callback(err)
+        } else {
+          user = results[0]
+          // TODO (Lucas Wotton): Find out why new User doesn't work. For now user works LOL
+          callback(null, user)
+        }
+        connection.release()
+      })
+    }
+  })
 }
 
 module.exports.addUser = function(newUser, callback) {
@@ -39,7 +43,25 @@ module.exports.addUser = function(newUser, callback) {
         throw err
       }
       newUser.password = hash
-      newUser.save(callback)
+      insertUserQuery = "INSERT INTO USERS(username, email, password, photoUrl) VALUES (?)"
+      values = [[newUser.username, newUser.email, newUser.password, newUser.photoUrl]]
+      db.getConnection(global.SQLpool, (err, connection) => {
+        if (err) {
+          callback(err)
+        } else {
+          connection.query(insertUserQuery, values, function(err, results, fields) {
+            if (err) {
+              if (err.message.includes(sqlerrors.DUPLICATE_ENTRY)) {
+                callback("User with username " + newUser.username + " already exists.")
+              }
+              callback(err)
+            } else {
+              callback(null, newUser)
+            }
+            connection.release()
+          })
+        }
+      })
     })
   })
 }
