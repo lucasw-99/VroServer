@@ -1,4 +1,5 @@
-var mysql =  require("mysql");
+const mysql =  require('mysql')
+const util = require('util')
 
 /**
  * Defines database operations.
@@ -27,7 +28,7 @@ DB.prototype.getConnection = function(pool, callback){
     if (err) {
       //logging here
       console.log(err);
-      callback(true);
+      callback(err);
       return;
     }
     connection.on('error', function(err) {

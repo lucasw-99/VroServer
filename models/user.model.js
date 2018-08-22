@@ -1,6 +1,5 @@
 const bcrypt = require('bcryptjs')
 const db = require('./db')
-
 const sqlerrors = require('../errors/sql-errors')
 
 module.exports.User = function User(username, password, email, photoUrl, id=null) {
@@ -97,62 +96,4 @@ module.exports.comparePassword = function(candidatePassword, hash, callback) {
 
     callback(null, isMatch)
   })
-}
-
-module.exports.getUserFollowers = function(userId, callback) {
-  User.findById(userId, callback)
-}
-
-module.exports.addFollower = async function(userId, newFollowerId, callback) {
-  const session = await mongoose.startSession()
-  session.startTransaction()
-  console.log('session transaction started')
-  try {
-    const opts = { session, new: true }
-    let firstUpdate = await User.update(
-      { _id: userId },
-      { $push: { followerIds: newFollowerId }},
-      { session })
-    console.log(firstUpdate)
-
-    if (firstUpdate.ok) {
-      console.log('first update ok')
-      try {
-        let secondUpdate = await User.update(
-          { _id: newFollowerId },
-          { $push: { followingIds: userId }},
-          { session })
-        if (!secondUpdate.ok) {
-          throw new Error("Could not follow user due to error")
-        }
-        console.log('second update ok')
-
-        await session.commitTransaction()
-        session.endSession()
-        callback(null)
-      } catch (error) {
-        await session.abortTransaction()
-        session.endSession()
-        callback(error)
-      }
-      return
-    }
-  } catch (error) {
-      console.log(error)
-      console.log('First transaction failed :(')
-      await session.abortTransaction()
-      session.endSession()
-      callback(error)
-  }
-}
-
-module.exports.removeFollower = function(userId, removeFollowerId, callback) {
-  // TODO (Lucas Wotton): Make this atomic
-  User.update(
-    { _id: userId },
-    { $pull: { followerIds: removeFollowerId }})
-  User.update(
-    { _id: removeFollowerId},
-    { $pull: { followingIds: userId }},
-    callback)
 }
