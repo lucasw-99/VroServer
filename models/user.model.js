@@ -10,90 +10,82 @@ module.exports.User = function User(username, password, email, photoUrl, id=null
   this.id = id
 }
 
-module.exports.getUserById = function(userId, callback) {
+module.exports.getUserById = async function(userId, callback) {
   findUserQuery = "SELECT * FROM USERS WHERE id = ?"
-  console.log('userId:', userId)
   values = [userId]
-  db.getConnection(global.SQLpool, (err, connection) => {
+  try {
+    connection = await db.getConnection()
+    output = await db.query(connection, findUserQuery, values)
+    results = output.results
+    err = output.err
     if (err) {
-      callback(err)
+      // TODO (Lucas Wotton): Should I throw an err here?
+      console.log('throwing err from db query')
+      throw err
+    } else if (results.length === 0) {
+      // no user with userId was found
+      return { success: false }
     } else {
-      connection.query(findUserQuery, values, function(err, results, fields) {
-        if (err) {
-          callback(err)
-        } else if (results.length === 0) {
-          callback({ message: "No user with id " + id + " was found. User might have been deleted, and this is an old JWT." })
-        } else {
-          console.log(results)
-          user = results[0]
-          // TODO (Lucas Wotton): Find out why new User doesn't work. For now user works LOL
-          callback(null, user)
-        }
-        connection.release()
-      })
+      // TODO (Lucas Wotton): Find out why new User doesn't work. For now results[0] works LOL
+      return { success: true, user: results[0] }
     }
-  })
+  } catch (err) {
+    throw err
+  }
 }
 
-module.exports.getUserByUsername = function(username, callback) {
+module.exports.getUserByUsername = async function(username) {
   findUserQuery = "SELECT * FROM USERS WHERE username = ?"
   values = [username]
-  db.getConnection(global.SQLpool, (err, connection) => {
-    if (err) {
-      callback(err)
-    } else {
-      connection.query(findUserQuery, values, function(err, results, fields) {
-        if (err) {
-          callback(err)
-        } else if (results.length === 0) {
-          callback({ message: "No user with username " + username + " was found." })
-        } else {
-          user = results[0]
-          // TODO (Lucas Wotton): Find out why new User doesn't work. For now user works LOL
-          callback(null, user)
-        }
-        connection.release()
-      })
-    }
-  })
+  try {
+    connection = await db.getConnection()
+    output = await db.query(connection, findUserQuery, values)
+  } catch (err) {
+    throw err
+  }
+  results = output.results
+  err = output.err
+  if (err) {
+    throw err 
+  } else if (results.length === 0) {
+    return { success: false, msg: "No user with username " + username + " was found." }
+  } else {
+    user = results[0]
+    // TODO (Lucas Wotton): Find out why new User doesn't work. For now user works LOL
+    return { success: true, user: user }
+  }
 }
 
 module.exports.addUser = function(newUser, callback) {
-  bcrypt.genSalt(10, (err, salt) => {
-    bcrypt.hash(newUser.password, salt, (err, hash) => {
-      if (err) {
-        throw err
-      }
-      newUser.password = hash
-      insertUserQuery = "INSERT INTO USERS(username, email, password, photoUrl) VALUES (?)"
-      values = [[newUser.username, newUser.email, newUser.password, newUser.photoUrl]]
-      db.getConnection(global.SQLpool, (err, connection) => {
+  return new Promise( (resolve, reject) => {
+    bcrypt.genSalt(10, (err, salt) => {
+      bcrypt.hash(newUser.password, salt, async function(err, hash) {
         if (err) {
-          callback(err)
-        } else {
-          connection.query(insertUserQuery, values, function(err, results, fields) {
-            if (err) {
-              if (err.message.includes(sqlerrors.DUPLICATE_ENTRY)) {
-                callback("User with username " + newUser.username + " already exists.")
-              }
-              callback(err)
-            } else {
-              callback(null, newUser)
-            }
-            connection.release()
-          })
+          throw err
+        }
+        newUser.password = hash
+        insertUserQuery = "INSERT INTO USERS(username, email, password, photoUrl) VALUES (?)"
+        values = [[newUser.username, newUser.email, newUser.password, newUser.photoUrl]]
+        try {
+          connection = await db.getConnection()
+          result = await db.query(connection, insertUserQuery, values)
+          resolve({ success: true, userId: result.results.insertId })
+        } catch (err) {
+          reject(err)
         }
       })
     })
   })
 }
 
-module.exports.comparePassword = function(candidatePassword, hash, callback) {
-  bcrypt.compare(candidatePassword, hash, (err, isMatch) => {
-    if (err) {
-      throw err
-    }
-
-    callback(null, isMatch)
+module.exports.comparePassword = function(candidatePassword, hash) {
+  return new Promise( (resolve, reject) => {
+    bcrypt.compare(candidatePassword, hash, (err, isMatch) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(isMatch)
+      }
+    })
   })
 }

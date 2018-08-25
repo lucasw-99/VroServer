@@ -4,63 +4,62 @@ const config = require('../config/jwt')
 
 
 /* POST register user */
-exports.register_user_post = function(req, res) {
+// TODO (Lucas Wotton): Change to PUT request
+exports.register_user_post = async function(req, res) {
   username = req.body.username
   password = req.body.password
   email = req.body.email
   // TODO (Lucas Wotton): Add default photoUrl?
   photoUrl = null
   const newUser = new User.User(username, password, email, photoUrl)
-  User.addUser(newUser, (err, user) => {
-    if (err) {
-      console.log(err)
-      res.json({success: false, msg: err})
-    } else {
-      res.json({success: true, msg: 'Registered user with username ' + user.username})
-    }
-  })
+  try {
+    result = await User.addUser(newUser)
+    res.json({ success: true, msg: 'registered user with username ' + newUser.username })
+  } catch (err) {
+    res.json({ success: false, msg: err })
+  }
 }
 
 /* POST authenticate user with username & password, returns JWT */
-exports.authenticate_user_post = function(req, res) {
+// TODO (Lucas Wotton): Change to PUT request?
+exports.authenticate_user_post = async function(req, res) {
   const username = req.body.username
   const password = req.body.password
   
-  User.getUserByUsername(username, (err, user) => {
-    if (err) {
-      throw err
+  try {
+    result = await User.getUserByUsername(username)
+    if (!result.success) {
+      res.json(result)
+      return
     }
-
-    if (!user) {
-      res.json({success: false, msg: 'User not found bruh'})
+    user = result.user
+    isMatch = await User.comparePassword(password, user.password)
+    if (isMatch) {
+      const token = jwt.sign(JSON.stringify(user), config.secret, {})
+      res.json({
+        success: true,
+        token: 'JWT ' + token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email
+        }
+      })
+    } else {
+      return res.json({success: false, msg: "Password didn't match"})
     }
-
-    User.comparePassword(password, user.password, (err, isMatch) => {
-      if (err) {
-        throw err
-      }
-
-      if (isMatch) {
-        console.log(user)
-        const token = jwt.sign(JSON.stringify(user), config.secret, {})
-
-        res.json({
-          success: true,
-          token: 'JWT ' + token,
-          user: {
-            id: user.id,
-            username: user.username,
-            email: user.email
-          }
-        })
-      } else {
-        return res.json({success: false, msg: "Password didn't match"})
-      }
-    })
-  })
+  } catch (err) {
+    // TODO (Lucas Wotton): Use next to throw 500 error?
+    throw err
+  }
 }
 
 /* GET get user profile, authenticates with JWT */
 exports.get_user = function(req, res) {
-  res.json({user: req.user})
+  console.log('in here bish. req:', req)
+  if (req.user) {
+    res.json({ success: true, user: req.user })
+  } else {
+    res.json({ success: false, msg: 'User specified by JWT not found.' })
+  }
 }

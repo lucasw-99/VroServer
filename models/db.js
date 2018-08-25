@@ -22,27 +22,53 @@ DB.prototype.createPool = function() {
  * @param {object} pool - Mysql pool object.
  * @param {function} callback - Callback.
  */
-DB.prototype.getConnection = function(pool, callback){
-  var self = this;
-  pool.getConnection(function(err, connection) {
-    if (err) {
-      //logging here
-      console.log(err);
-      callback(err);
-      return;
-    }
-    connection.on('error', function(err) {
-      if (err.code === "PROTOCOL_CONNECTION_LOST") {
-        connection.destroy();        
-      } else {
-        connection.release();
+DB.prototype.getConnection = function getConnection() {
+  return new Promise( (resolve, reject) => {
+    pool = global.SQLpool
+    pool.getConnection(function(err, connection) {
+      if (err) {
+        //logging here
+        console.log(err)
+        return reject(err)
       }
-      console.log(err);
-      callback(true);
-      return;
-    });
-    callback(null, connection);
-  });
+      connection.on('error', function(err) {
+        if (err.code === "PROTOCOL_CONNECTION_LOST") {
+          connection.destroy()
+        } else {
+          connection.release()
+        }
+        console.log('err from error thing, fuk', err)
+        return reject(err)
+      })
+      return resolve(connection)
+    })
+  })
+}
+
+DB.prototype.query = async function(connection, sqlQuery, args) {
+  return new Promise( (resolve, reject) => {
+    if (!args) {
+      connection.query(sqlQuery, function(err, results, fields) {
+        connection.release()
+        if (err) {
+          console.log(err.message);
+          return reject(err)        
+        } else {
+          return resolve({ err: err, results: results, fields: fields })
+        }
+      });
+    } else {
+      connection.query(sqlQuery, args, function(err, results, fields) {
+        connection.release()
+        if (err) {
+          console.log(err.message);
+          return reject(err)
+        } else {
+          return resolve({ err: err, results: results, fields: fields })
+        }
+      });
+    }  
+  })
 }
 
 /**

@@ -1,6 +1,8 @@
 // establish Mysql Connection  
-const mysql = require('mysql');  
-const db = require('../models/db.js');
+const mysql = require('mysql')
+const db = require('../models/db.js')
+const util = require('util')
+const bluebird = require('bluebird')
   
 async function createUserTable() {  
   const createUserTableSQL = `CREATE TABLE IF NOT EXISTS USERS(
@@ -9,43 +11,29 @@ async function createUserTable() {
                               email varchar(255) NOT NULL,
                               password varchar(80) NOT NULL,
                               photoUrl varchar(2083) )`;
-  await db.getConnection(global.SQLpool, (err, connection) => {
-    if (err) {
-      console.log('fuck. Err:', err)
-    } else {
-      connection.query(createUserTableSQL, function(err, results, fields) {
-        if (err) {
-          console.log(err.message);
-        } else {
-          console.log('created user table')
-        }
-        connection.release()
-      });
-    }
-  })
+  try {
+    connection = await db.getConnection()
+    resultObj = await db.query(connection, createUserTableSQL)
+    console.log('created user table')
+  } catch (err) {
+    console.log(err.message)
+  }
 }
 
 async function createFollowingTable() {
-  const createFollowingTableSQL = `CREATE TABLE IF NOT EXISTS FOLLOWERS(
-                                   followingUserId int,
-                                   followedUserId int,
-                                   PRIMARY KEY(followingUserId, followedUserId),
-                                   FOREIGN KEY(followingUserId) REFERENCES USERS(id),
-                                   FOREIGN KEY(followedUserId) REFERENCES USERS(id) )`;
-  await db.getConnection(global.SQLpool, (err, connection) => {
-    if (err) {
-      console.log('fuck. Err:', err)
-    } else {
-      connection.query(createFollowingTableSQL, function(err, results, fields) {
-        if (err) {
-          console.log(err.message);
-        } else {
-          console.log('created following table')
-        }
-        connection.release()
-      });
-    }
-  })
+  const createFollowingTableQuery = `CREATE TABLE IF NOT EXISTS FOLLOWERS(
+                                     followingUserId int,
+                                     followedUserId int,
+                                     PRIMARY KEY(followingUserId, followedUserId),
+                                     FOREIGN KEY(followingUserId) REFERENCES USERS(id),
+                                     FOREIGN KEY(followedUserId) REFERENCES USERS(id) )`;
+  try {
+    connection = await db.getConnection()
+    resultObj = await db.query(connection, createFollowingTableQuery)
+    console.log('created following table')
+  } catch (err) {
+    console.log(err.message)
+  }
 }
 
 module.exports.initTables = async function() {

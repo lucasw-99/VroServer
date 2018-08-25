@@ -7,18 +7,18 @@ module.exports = function(passport) {
   var opts = {}
   opts.jwtFromRequest = ExtractJwt.fromAuthHeaderWithScheme('jwt')
   opts.secretOrKey = config.secret
-  passport.use(new JwtStrategy(opts, (jwt_payload, done) => {
-    User.getUserById(jwt_payload.id, (err, user) => {
-      if (err) {
-        return done(err, false)
-      }
-
-      console.log(user)
-      if (user) {
-        return done(null, user)
+  passport.use(new JwtStrategy(opts, async function(jwt_payload, done) {
+    try {
+      result = await User.getUserById(jwt_payload.id)
+      if (result.success) {
+        // do not return the hashed password
+        result.user.password = null
+        return done(null, result.user)
       } else {
         return done(null, false)
       }
-    })
+    } catch (err) {
+      return done(err)
+    }
   }))
 }
