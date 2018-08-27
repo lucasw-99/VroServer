@@ -46,7 +46,7 @@ exports.authenticate_user_post = async function(req, res) {
         }
       })
     } else {
-      return res.json({success: false, msg: "Password didn't match"})
+      return res.json({ success: false, msg: "Password didn't match" })
     }
   } catch (err) {
     // TODO (Lucas Wotton): Use next to throw 500 error?

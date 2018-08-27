@@ -30,7 +30,6 @@ async function createFollowingTable() {
   try {
     connection = await db.getConnection()
     resultObj = await db.query(connection, createFollowingTableQuery)
-    console.log('created following table')
   } catch (err) {
     console.log(err.message)
   }
