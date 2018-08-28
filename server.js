@@ -10,6 +10,7 @@ const mongoose = require('mongoose')
 
 const userRouter = require('./routes/user')
 const followRouter = require('./routes/follow.router')
+const eventRouter = require('./routes/event.router')
 const wikiRouter = require('./routes/wiki')
 
 const db = require('./models/db.js');
@@ -35,7 +36,8 @@ app.use('/', wikiRouter)
 app.use('/users', userRouter)
 // route follow requests
 app.use('/followers', followRouter)
-// route events
+// route event requests
+app.use('/events', eventRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found')
