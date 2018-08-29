@@ -2,6 +2,7 @@ const db = require('./db')
 const sqlerrors = require('../errors/sql-errors')
 
 
+// TODO (Lucas Wotton): Convert these results to return success instead of throwing exceptions
 module.exports.getUserFollowerIds = async function(userId) {
   getUserFollowersQuery = `SELECT followingUserId FROM FOLLOWERS
                            WHERE followedUserId = ?`

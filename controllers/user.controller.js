@@ -1,4 +1,5 @@
-const User = require('../models/user.model');
+const User = require('../models/user.model')
+const Event = require('../models/event.model')
 const jwt = require('jsonwebtoken')
 const config = require('../config/jwt')
 
@@ -54,12 +55,24 @@ exports.authenticate_user_post = async function(req, res) {
   }
 }
 
-/* GET get user profile, authenticates with JWT */
+/* GET get user profile */
 exports.get_user = function(req, res) {
-  console.log('in here bish. req:', req)
   if (req.user) {
     res.json({ success: true, user: req.user })
+  }
+  console.log(' do we ever make it here?')
+  res.json({ success: false, msg: 'FUCK' })
+}
+
+/* GET get user events */
+exports.get_user_events = async function(req, res) {
+  user = req.user
+  result = await Event.getUserEvents(user) 
+  if (result.success) {
+    res.json({ success: true, events: result.events })
   } else {
-    res.json({ success: false, msg: 'User specified by JWT not found.' })
+    console.log('error getting events')
+    console.log(result.err)
+    res.json({ success: false })
   }
 }
