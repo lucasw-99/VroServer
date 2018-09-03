@@ -43,6 +43,7 @@ async function createEventsTable() {
                                   latitude DECIMAL NOT NULL,
                                   longitude DECIMAL NOT NULL,
                                   eventImageUrl varchar(2083),
+                                  getStreamTime VARCHAR(27) NOT NULL,
                                   attendingCount int DEFAULT 0,
                                   likeCount int DEFAULT 0,
                                   timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,

@@ -45,7 +45,7 @@ DB.prototype.getConnection = function getConnection() {
   })
 }
 
-DB.prototype.query = async function(connection, sqlQuery, args) {
+DB.prototype.query = function(connection, sqlQuery, args) {
   return new Promise( (resolve, reject) => {
     if (!args) {
       connection.query(sqlQuery, function(err, results, fields) {
@@ -72,28 +72,35 @@ DB.prototype.query = async function(connection, sqlQuery, args) {
 }
 
 /**
- * Establishes mysql connection, begins transaction and returns the transactio connection object.
+ * Establishes mysql connection, begins transaction and returns the transaction connection object.
  * @function
  * @param {object} pool - Mysql pool object.
  * @param {function} callback - Callback.
  */
-DB.prototype.createTransaction = function(pool,callback) {
-  var self = this;
-  self.getConnection(pool,function(err,connection) {
-    if (err) {
-      //logging here
-      console.log(err);
-      callback(true);
-      return;
-    }
+DB.prototype.createTransaction = function(connection) {
+  return new Promise( (resolve, reject) => {
     connection.beginTransaction(function(err) {
       if (err){
-        console.log(err);
-        callback(true);
-        return;
+        reject(err)
+      } else {
+        resolve(connection)
       }
-      callback(null,connection)
-    });
-  });
+    })
+  })
 }
+
+DB.prototype.commitTransaction = function(connection) {
+  return new Promise( (resolve, reject) => {
+    connection.commit(function(err) {
+      if (err) {
+        connection.rollback(function() {
+          return reject(err)
+        })
+      } else {
+        return resolve()  
+      }
+    })
+  })
+}
+
 module.exports = new DB();

@@ -4,19 +4,33 @@ const config = require('../config/jwt')
 
 
 /* POST request, posts a new event */
-exports.post_event = async function(req, res) {
+exports.postEvent = async function(req, res) {
   host = req.user
   description = req.body.description
   address = req.body.address
   geoloc = { lat: req.body.lat, lng: req.body.lng }
   eventImageUrl = req.body.eventImageUrl
   eventTime = req.body.eventTime
-  const newEvent = new Event.Event(host, description, address, geoloc, eventImageUrl, eventTime)
-  result = await Event.postEvent(newEvent)
-  if (result.success) {
+  const newEvent = new Event.Event(host, description, address, geoloc, eventImageUrl, eventTime, new Date().toISOString())
+  try {
+    result = await Event.postEvent(newEvent)
+    res.json({ success: true, eventId: result.eventId })
+  } catch (err) {
+    console.log('err with posting event')
+    console.log(err)
+    res.json({ success: false })
+  }
+}
+
+exports.deleteEvent = async function(req, res) {
+  host = req.user
+  eventId = req.params.eventId
+  try {
+    await Event.deleteEvent(host.id, eventId)
     res.json({ success: true })
-  } else {
-    // TODO (Lucas Wotton): Give user error message?
+  } catch (err) {
+    console.log('err with deleting event')
+    console.log(err)
     res.json({ success: false })
   }
 }

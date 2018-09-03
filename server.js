@@ -7,13 +7,19 @@ const path = require('path')
 const cors = require('cors')
 const passport = require('passport')
 const mongoose = require('mongoose')
+const stream = require('getstream');
 
 const userRouter = require('./routes/user')
 const followRouter = require('./routes/follow.router')
 const eventRouter = require('./routes/event.router')
 const wikiRouter = require('./routes/wiki')
+const getstream = require('./getstream')
 
 const db = require('./models/db.js');
+
+// Instantiate a new client (server side)
+var streamClient = stream.connect(getstream.config.apiKey, getstream.config.apiSecret, getstream.config.apiAppId);
+global.streamClient = streamClient
 
 if (global.SQLpool === undefined) {
   global.SQLpool = db.createPool()

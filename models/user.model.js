@@ -67,6 +67,7 @@ module.exports.addUser = function(newUser, callback) {
         insertUserQuery = "INSERT INTO USERS(username, email, password, photoUrl) VALUES (?)"
         values = [[newUser.username, newUser.email, newUser.password, newUser.photoUrl]]
         try {
+          // TODO (Lucas Wotton): Make this a transaction
           connection = await db.getConnection()
           result = await db.query(connection, insertUserQuery, values)
           resolve({ success: true, userId: result.results.insertId })
