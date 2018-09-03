@@ -13,6 +13,7 @@ const userRouter = require('./routes/user')
 const followRouter = require('./routes/follow.router')
 const eventRouter = require('./routes/event.router')
 const likeRouter = require('./routes/like.router')
+const attendingRouter = require('./routes/attending.router')
 const wikiRouter = require('./routes/wiki')
 const getstream = require('./getstream')
 
@@ -47,6 +48,8 @@ app.use('/followers', followRouter)
 app.use('/events', eventRouter)
 // route like requests
 app.use('/likes', likeRouter)
+// route attending requests
+app.use('/attending', attendingRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found')

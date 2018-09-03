@@ -1,7 +1,7 @@
 const db = require('./db')
 const sqlerrors = require('../errors/sql-errors')
 
-module.exports.Event = function Event(host, description, address, geoloc, eventImageUrl, eventTime, getStreamTime, attendeeCount=0, likeCount=0, timestamp=null, id=null) {
+module.exports.Event = function Event(host, description, address, geoloc, eventImageUrl, eventTime, getStreamTime, attendingCount=0, likeCount=0, timestamp=null, id=null) {
   this.host = host
   this.description = description
   this.address = address
@@ -9,7 +9,7 @@ module.exports.Event = function Event(host, description, address, geoloc, eventI
   this.eventImageUrl = eventImageUrl
   this.eventTime = eventTime
   this.getStreamTime = getStreamTime
-  this.attendeeCount = attendeeCount
+  this.attendingCount = attendingCount
   this.likeCount = likeCount
   this.timestamp = timestamp  
   this.id = id
@@ -26,7 +26,7 @@ module.exports.getEvent = async function(eventId) {
     if (foundEvent) {
       return { success: true, event: foundEvent }
     } else {
-      return { success: false }
+      throw new Error("Event not found")
     }
   } catch (err) {
     throw err
@@ -56,7 +56,7 @@ module.exports.postEvent = async function(newEvent) {
       foreign_id: 'Event:' + result.results.insertId,
       time: newEvent.getStreamTime,
       likeCount: newEvent.likeCount,
-      attendeeCount: newEvent.attendeeCount
+      attendingCount: newEvent.attendingCount
     })
     await db.commitTransaction(transaction)
     return { success: true, eventId: result.results.insertId }

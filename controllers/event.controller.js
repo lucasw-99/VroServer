@@ -12,7 +12,7 @@ exports.getEvent = async function(req, res) {
   } catch (err) {
     console.log('err with finding event')
     console.log(err)
-    res.json({ success: false })
+    res.json({ success: false , err: err.message })
   }
 }
 

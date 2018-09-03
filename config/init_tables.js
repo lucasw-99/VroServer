@@ -70,9 +70,25 @@ async function createLikesTable() {
   }
 }
 
+async function createAttendingTable() {
+  const createAttendingTableQuery = `CREATE TABLE IF NOT EXISTS ATTENDING(
+                                     attendingId int,
+                                     eventId int,
+                                     PRIMARY KEY(attendingId, eventId),
+                                     FOREIGN KEY(attendingId) REFERENCES USERS(id),
+                                     FOREIGN KEY(eventId) REFERENCES EVENTS(id) )`
+  try {
+    connection = await db.getConnection()
+    await db.query(connection, createAttendingTableQuery)
+  } catch (err) {
+    console.log(err.message)
+  }
+}
+
 module.exports.initTables = async function() {
   await createUserTable()
   await createFollowingTable()
   await createEventsTable()
   await createLikesTable()
+  await createAttendingTable()
 }

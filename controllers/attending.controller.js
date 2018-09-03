@@ -1,20 +1,20 @@
-const Like = require('../models/like.model')
+const Attending = require('../models/attending.model')
 const Event = require('../models/event.model')
 
-/* GET get all likes for user */
-exports.getUserLikes = async function(req, res) {
+/* GET get all events a user is attending */
+exports.getUserEventsAttending = async function(req, res) {
   let userId = req.user.id
   try {
-    eventIds = await Like.getUserFollowerIds(userId)
+    eventIds = await Attending.getUserEventsAttending(userId)
     res.json({ success: true, eventIds: eventIds })
   } catch (err) {
-    console.log('err with getting user likes:', err)
+    console.log('err with getting events user is attending:', err)
     res.json({ success: false, msg: err })
   }
 }
 
-/* PUT like post for userId */
-exports.likePost = async function(req, res) {
+/* PUT add attendee to events attending list */
+exports.attendEvent = async function(req, res) {
   let userId = req.user.id
   let eventId = req.params.eventId
   try {
@@ -23,15 +23,15 @@ exports.likePost = async function(req, res) {
       throw new Error("Event does not exist")
     }
     removeTimezoneStreamTime = result.event.getStreamTime.replace('Z', '000')
-    result = await Like.likePost(userId, eventId, removeTimezoneStreamTime)
+    result = await Attending.attendEvent(userId, eventId, removeTimezoneStreamTime)
     res.json({ success: true })
   } catch (err) {
     res.json({ success: false, msg: err.message })
   }
 }
 
-/* DELETE remove follower from users following list */
-exports.unlikePost = async function(req, res) {
+/* DELETE remove attendee from events attending list */
+exports.unattendEvent = async function(req, res) {
   let userId = req.user.id
   let eventId = req.params.eventId
   try {
@@ -40,10 +40,10 @@ exports.unlikePost = async function(req, res) {
       throw new Error("Event does not exist")
     }
     removeTimezoneStreamTime = result.event.getStreamTime.replace('Z', '000')
-    result = await Like.unlikePost(userId, eventId, removeTimezoneStreamTime)
+    result = await Attending.unattendEvent(userId, eventId, removeTimezoneStreamTime)
     res.json({ success: true })
   } catch (err) {
-    console.log('in unlike post catch block')
+    console.log('in unnattend event catch block')
     console.log(err)
     res.json({ success: false, msg: err.message })
   }
