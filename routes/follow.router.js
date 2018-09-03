@@ -7,7 +7,7 @@ const followController = require('../controllers/follow.controller')
 /* GET get all user followers */
 router.get('/', passport.authenticate('jwt', {session: false}), followController.userFollowersGet)
 
-/* POST add newFollowerId to userId's followers */
+/* PUT add newFollowerId to userId's followers */
 router.put('/newFollower/:newFollowerId', passport.authenticate('jwt', {session: false}), followController.addFollower)
 
 /* DELETE remove newFollowerId to userId's followers */

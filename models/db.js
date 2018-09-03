@@ -45,7 +45,7 @@ DB.prototype.getConnection = function getConnection() {
   })
 }
 
-DB.prototype.query = function(connection, sqlQuery, args) {
+DB.prototype.query = function(connection, sqlQuery, args=false, keepConnection=false) {
   return new Promise( (resolve, reject) => {
     if (!args) {
       connection.query(sqlQuery, function(err, results, fields) {
@@ -59,7 +59,9 @@ DB.prototype.query = function(connection, sqlQuery, args) {
       });
     } else {
       connection.query(sqlQuery, args, function(err, results, fields) {
-        connection.release()
+        if (!keepConnection) {
+          connection.release()
+        }
         if (err) {
           console.log(err.message);
           return reject(err)
@@ -99,6 +101,14 @@ DB.prototype.commitTransaction = function(connection) {
       } else {
         return resolve()  
       }
+    })
+  })
+}
+
+DB.prototype.rollbackTransaction = function(connection) {
+  return new Promise( (resolve, reject) => {
+    connection.rollback(function() {
+      resolve()
     })
   })
 }

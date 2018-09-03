@@ -3,6 +3,19 @@ const jwt = require('jsonwebtoken')
 const config = require('../config/jwt')
 
 
+/* GET request, gets an event matching eventId */
+exports.getEvent = async function(req, res) {
+  eventId = req.params.eventId
+  try {
+    result = await Event.getEvent(eventId)
+    res.json({ success: true, event: result.event })
+  } catch (err) {
+    console.log('err with finding event')
+    console.log(err)
+    res.json({ success: false })
+  }
+}
+
 /* POST request, posts a new event */
 exports.postEvent = async function(req, res) {
   host = req.user

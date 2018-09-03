@@ -2,7 +2,6 @@
 const mysql = require('mysql')
 const db = require('../models/db.js')
 const util = require('util')
-const bluebird = require('bluebird')
   
 async function createUserTable() {  
   const createUserTableSQL = `CREATE TABLE IF NOT EXISTS USERS(
@@ -56,8 +55,24 @@ async function createEventsTable() {
   }
 }
 
+async function createLikesTable() {
+  const createLikesTableQuery = `CREATE TABLE IF NOT EXISTS LIKES(
+                                 likingUserId int,
+                                 eventId int,
+                                 PRIMARY KEY(likingUserId, eventId),
+                                 FOREIGN KEY(likingUserId) REFERENCES USERS(id),
+                                 FOREIGN KEY(eventId) REFERENCES EVENTS(id) )`
+  try {
+    connection = await db.getConnection()
+    await db.query(connection, createLikesTableQuery)
+  } catch (err) {
+    console.log(err.message)
+  }
+}
+
 module.exports.initTables = async function() {
   await createUserTable()
   await createFollowingTable()
   await createEventsTable()
+  await createLikesTable()
 }

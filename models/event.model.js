@@ -15,6 +15,24 @@ module.exports.Event = function Event(host, description, address, geoloc, eventI
   this.id = id
 }
 
+module.exports.getEvent = async function(eventId) {
+  findEventQuery = `SELECT * FROM EVENTS
+                    WHERE id = ?`
+  values = [eventId]
+  try {
+    connection = await db.getConnection()
+    result = await db.query(connection, findEventQuery, values)
+    foundEvent = result.results[0]
+    if (foundEvent) {
+      return { success: true, event: foundEvent }
+    } else {
+      return { success: false }
+    }
+  } catch (err) {
+    throw err
+  }
+}
+
 module.exports.postEvent = async function(newEvent) {
   insertEventQuery = `INSERT INTO EVENTS(hostId, description, address, latitude, longitude, eventImageUrl, getStreamTime)
                       VALUES (?)`
@@ -22,13 +40,11 @@ module.exports.postEvent = async function(newEvent) {
              newEvent.geoloc.lat, newEvent.geoloc.lng, newEvent.eventImageUrl, newEvent.getStreamTime]]
   
   transaction = null
-  calledGetStream = false
   try {
     connection = await db.getConnection()
     transaction = await db.createTransaction(connection)
     result = await db.query(transaction, insertEventQuery, values)
     var postAuthor = global.streamClient.feed('user', newEvent.host.id.toString())
-    calledGetStream = true
     streamResult = await postAuthor.addActivity({
       actor: 'User:' + newEvent.host.id.toString(),
       verb: 'Event',
@@ -38,18 +54,17 @@ module.exports.postEvent = async function(newEvent) {
       geoloc: newEvent.geoloc,
       eventImageUrl: newEvent.eventImageUrl,
       foreign_id: 'Event:' + result.results.insertId,
-      time: newEvent.getStreamTime
+      time: newEvent.getStreamTime,
+      likeCount: newEvent.likeCount,
+      attendeeCount: newEvent.attendeeCount
     })
     await db.commitTransaction(transaction)
     return { success: true, eventId: result.results.insertId }
   } catch (err) {
-    if (transaction !== null) {
-      transaction.rollback(function() {
-        throw err
-      })
-    } else {
-      throw err
+    if (transaction) {
+      await db.rollbackTransaction(transaction)
     }
+    throw err
   }
 }
 
@@ -73,13 +88,10 @@ module.exports.deleteEvent = async function(authorId, eventId) {
   } catch (err) {
     // TODO (Lucas Wotton): Better error checking. Just because error is called from get stream
     // doesn't mean event won't exist on getstream.
-    if (transaction !== null) {
-      transaction.rollback(function() {
-        throw err
-      })
-    } else {
-      throw err
+    if (transaction) {
+      await db.rollbackTransaction(transaction)
     }
+    throw err
   }
 }
 
