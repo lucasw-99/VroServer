@@ -7,7 +7,8 @@ exports.userFollowersGet = async function(req, res) {
   let userId = req.user.id
   try {
     followerIds = await Follow.getUserFollowerIds(userId)
-    res.json({ success: true, followerIds: followerIds })
+    followingIds = await Follow.getUserFollowingIds(userId)
+    res.json({ success: true, followerIds: followerIds, followingIds: followingIds })
   } catch (err) {
     console.log('do something with this err:', err)
     res.json({ success: false, msg: err })

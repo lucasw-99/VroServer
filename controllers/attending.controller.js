@@ -23,7 +23,7 @@ exports.attendEvent = async function(req, res) {
       throw new Error("Event does not exist")
     }
     removeTimezoneStreamTime = result.event.getStreamTime.replace('Z', '000')
-    result = await Attending.attendEvent(userId, eventId, removeTimezoneStreamTime)
+    await Attending.attendEvent(userId, eventId, removeTimezoneStreamTime)
     res.json({ success: true })
   } catch (err) {
     res.json({ success: false, msg: err.message })
@@ -39,8 +39,9 @@ exports.unattendEvent = async function(req, res) {
     if (!result.success) {
       throw new Error("Event does not exist")
     }
+    // TODO (Lucas Wotton): Delete likes
     removeTimezoneStreamTime = result.event.getStreamTime.replace('Z', '000')
-    result = await Attending.unattendEvent(userId, eventId, removeTimezoneStreamTime)
+    await Attending.unattendEvent(userId, eventId, removeTimezoneStreamTime)
     res.json({ success: true })
   } catch (err) {
     console.log('in unnattend event catch block')

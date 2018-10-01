@@ -3,8 +3,8 @@ const sqlerrors = require('../errors/sql-errors')
 
 
 module.exports.getUserEventsAttending = async function(userId) {
-  getUserEventsAttendingQuery = `SELECT eventId FROM LIKES
-                                 WHERE likingUserId = ?`
+  getUserEventsAttendingQuery = `SELECT eventId FROM ATTENDING
+                                 WHERE attendingId = ?`
   values = [userId]
   try {
     connection = await db.getConnection()
@@ -19,12 +19,12 @@ module.exports.getUserEventsAttending = async function(userId) {
 
 module.exports.attendEvent = async function(userId, eventId, getStreamTime) {
   incrementAttendingQuery = `UPDATE EVENTS
-                         SET attendingCount = attendingCount + 1
-                         WHERE id = ?`
+                             SET attendingCount = attendingCount + 1
+                             WHERE id = ?`
   readNumAttendingQuery = `SELECT attendingCount FROM EVENTS
                            WHERE id = ?`
-  addAttendeeQuery = `INSERT INTO LIKES 
-                  VALUES (?, ?)`
+  addAttendeeQuery = `INSERT INTO ATTENDING
+                      VALUES (?, ?)`
   eventIdValues = [eventId]
   addAttendeeValues = [userId, eventId]
   transaction = null
@@ -44,7 +44,6 @@ module.exports.attendEvent = async function(userId, eventId, getStreamTime) {
       }
     })
     await db.commitTransaction(transaction)
-    return output.results
   } catch (err) {
     console.log(err.message)
     if (transaction) {
@@ -68,10 +67,12 @@ module.exports.unattendEvent = async function(userId, eventId, getStreamTime) {
   try {
     connection = await db.getConnection()
     transaction = await db.createTransaction(connection)
+    // TODO (Lucas Wotton): Ensure that the user is already attending the event
     keepConnection = true
     await db.query(transaction, decrementAttendingQuery, eventIdValues, keepConnection)
     result = await db.query(transaction, readNumAttendingQuery, eventIdValues, keepConnection)
     attendingCount = result.results[0].attendingCount
+    console.log('attendingCount:', attendingCount)
     await db.query(transaction, removeAttendeeQuery, removeAttendeeValues)
     await global.streamClient.activityPartialUpdate({
       foreignID: 'Event:' + eventId.toString(),
@@ -81,7 +82,6 @@ module.exports.unattendEvent = async function(userId, eventId, getStreamTime) {
       }
     })
     await db.commitTransaction(transaction)
-    return output.results
   } catch (err) {
     console.log(err.message)
     if (transaction) {

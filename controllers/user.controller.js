@@ -59,9 +59,9 @@ exports.authenticate_user_post = async function(req, res) {
 exports.get_user = function(req, res) {
   if (req.user) {
     res.json({ success: true, user: req.user })
+  } else {
+    res.json({ success: false, msg: 'FUCK' })
   }
-  console.log(' do we ever make it here?')
-  res.json({ success: false, msg: 'FUCK' })
 }
 
 /* GET get user events */

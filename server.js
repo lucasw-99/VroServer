@@ -14,6 +14,7 @@ const followRouter = require('./routes/follow.router')
 const eventRouter = require('./routes/event.router')
 const likeRouter = require('./routes/like.router')
 const attendingRouter = require('./routes/attending.router')
+const timelineRouter = require('./routes/timeline.router')
 const wikiRouter = require('./routes/wiki')
 const getstream = require('./getstream')
 
@@ -50,6 +51,8 @@ app.use('/events', eventRouter)
 app.use('/likes', likeRouter)
 // route attending requests
 app.use('/attending', attendingRouter)
+// route timeline requests
+app.use('/timeline', timelineRouter)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found')

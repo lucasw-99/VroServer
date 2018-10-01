@@ -11,7 +11,6 @@ module.exports.getUserLikes = async function(userId) {
     output = await db.query(connection, getUserLikesQuery, values)
     results = output.results
     err = output.err
-    console.log('if err is non-null review this code in likes. err:', err)
     return results
   } catch (err) {
     throw err

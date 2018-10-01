@@ -36,6 +36,7 @@ module.exports.getEvent = async function(eventId) {
 module.exports.postEvent = async function(newEvent) {
   insertEventQuery = `INSERT INTO EVENTS(hostId, description, address, latitude, longitude, eventImageUrl, getStreamTime)
                       VALUES (?)`
+  // TODO (Lucas Wotton): Put in eventTime here
   values = [[newEvent.host.id, newEvent.description, newEvent.address, 
              newEvent.geoloc.lat, newEvent.geoloc.lng, newEvent.eventImageUrl, newEvent.getStreamTime]]
   
@@ -79,7 +80,6 @@ module.exports.deleteEvent = async function(authorId, eventId) {
     transaction = await db.createTransaction(connection)
     result = await db.query(transaction, deleteEventQuery, values)
     var postAuthor = global.streamClient.feed('user', authorId.toString())
-    calledGetStream = true
     await postAuthor.removeActivity({
       foreignId: 'Event:' + eventId.toString()
     })

@@ -5,7 +5,7 @@ const Event = require('../models/event.model')
 exports.getUserLikes = async function(req, res) {
   let userId = req.user.id
   try {
-    eventIds = await Like.getUserFollowerIds(userId)
+    eventIds = await Like.getUserLikes(userId)
     res.json({ success: true, eventIds: eventIds })
   } catch (err) {
     console.log('err with getting user likes:', err)

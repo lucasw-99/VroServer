@@ -8,9 +8,9 @@ const likeController = require('../controllers/like.controller')
 router.get('/', passport.authenticate('jwt', { session: false }), likeController.getUserLikes)
 
 /* PUT add userId to eventId's likes */
-router.put('/likePost/:eventId', passport.authenticate('jwt', { session: false }), likeController.likePost)
+router.put('/:eventId', passport.authenticate('jwt', { session: false }), likeController.likePost)
 
 /* DELETE remove userId from eventId's likes */
-router.delete('/unlikePost/:eventId', passport.authenticate('jwt', { session: false }), likeController.unlikePost)
+router.delete('/:eventId', passport.authenticate('jwt', { session: false }), likeController.unlikePost)
 
 module.exports = router;

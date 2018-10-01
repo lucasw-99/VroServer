@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs')
 const db = require('./db')
 const sqlerrors = require('../errors/sql-errors')
 
+newUserPhotoUrl = "https://www.google.com/imgres?imgurl=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2F9%2F9f%2FNew_user_icon-01.svg%2F2000px-New_user_icon-01.svg.png&imgrefurl=https%3A%2F%2Fcommons.wikimedia.org%2Fwiki%2FFile%3ANew_user_icon-01.svg&docid=uyawawvKmYeYAM&tbnid=cGR4SJaiS0LUzM%3A&vet=10ahUKEwjZ8I7__uPdAhXzKX0KHXwVBfIQMwhHKAEwAQ..i&w=2000&h=1926&bih=637&biw=1264&q=new%20user&ved=0ahUKEwjZ8I7__uPdAhXzKX0KHXwVBfIQMwhHKAEwAQ&iact=mrc&uact=8"
+
 module.exports.User = function User(username, password, email, photoUrl, id=null) {
   this.username = username
   this.password = password
@@ -64,6 +66,9 @@ module.exports.addUser = function(newUser, callback) {
           throw err
         }
         newUser.password = hash
+        if (newUser.photoUrl === null) {
+          newUser.photoUrl = newUserPhotoUrl  
+        }
         insertUserQuery = "INSERT INTO USERS(username, email, password, photoUrl) VALUES (?)"
         values = [[newUser.username, newUser.email, newUser.password, newUser.photoUrl]]
         try {

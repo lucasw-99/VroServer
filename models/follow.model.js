@@ -2,7 +2,6 @@ const db = require('./db')
 const sqlerrors = require('../errors/sql-errors')
 
 
-// TODO (Lucas Wotton): Convert these results to return success instead of throwing exceptions
 module.exports.getUserFollowerIds = async function(userId) {
   getUserFollowersQuery = `SELECT followingUserId FROM FOLLOWERS
                            WHERE followedUserId = ?`
@@ -10,9 +9,27 @@ module.exports.getUserFollowerIds = async function(userId) {
   try {
     connection = await db.getConnection()
     output = await db.query(connection, getUserFollowersQuery, values)
-    results = output.results
-    err = output.err
-    console.log('if err is non-null review this code in follow. err', err)
+    results = output.results.map(function (val) {
+                                  return val.followingUserId
+                                 })
+    console.log('results:', results)
+    return results
+  } catch (err) {
+    throw err
+  }
+}
+
+module.exports.getUserFollowingIds = async function(userId) {
+  getUserFollowingQuery = `SELECT followedUserId FROM FOLLOWERS
+                           WHERE followingUserId = ?`
+  values = [userId]
+  try {
+    connection = await db.getConnection()
+    output = await db.query(connection, getUserFollowingQuery, values)
+    results = output.results.map(function (val) {
+                                  return val.followedUserId
+                                 })
+    console.log('following results:', results)
     return results
   } catch (err) {
     throw err
