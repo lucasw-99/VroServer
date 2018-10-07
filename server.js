@@ -8,6 +8,8 @@ const cors = require('cors')
 const passport = require('passport')
 const mongoose = require('mongoose')
 const stream = require('getstream');
+const algoliasearch = require('algoliasearch');
+
 
 const userRouter = require('./routes/user')
 const followRouter = require('./routes/follow.router')
@@ -17,12 +19,23 @@ const attendingRouter = require('./routes/attending.router')
 const timelineRouter = require('./routes/timeline.router')
 const wikiRouter = require('./routes/wiki')
 const getstream = require('./getstream')
+const algolia = require('./config/algolia')
 
 const db = require('./models/db.js');
 
 // Instantiate a new client (server side)
 var streamClient = stream.connect(getstream.config.apiKey, getstream.config.apiSecret, getstream.config.apiAppId);
 global.streamClient = streamClient
+
+// Instantiate Algolia client
+var algoliaClient = algoliasearch(algolia.application_id, algolia.api_key);
+var algoliaUsernameIndex = algoliaClient.initIndex('usernames');
+global.algoliaUsernameIndex = algoliaUsernameIndex
+global.algoliaUsernameIndex.setSettings({
+  'searchableAttributes': [
+    'username'
+  ]
+})
 
 if (global.SQLpool === undefined) {
   global.SQLpool = db.createPool()

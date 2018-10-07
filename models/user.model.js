@@ -71,12 +71,25 @@ module.exports.addUser = function(newUser, callback) {
         }
         insertUserQuery = "INSERT INTO USERS(username, email, password, photoUrl) VALUES (?)"
         values = [[newUser.username, newUser.email, newUser.password, newUser.photoUrl]]
+        transaction = null
         try {
-          // TODO (Lucas Wotton): Make this a transaction
           connection = await db.getConnection()
-          result = await db.query(connection, insertUserQuery, values)
+          transaction = await db.createTransaction(connection)
+          result = await db.query(transaction, insertUserQuery, values)
+          var object = {
+            "id": result.results.insertId,
+            "username": newUser.username,
+            "email": newUser.email,
+            "photoUrl": newUser.photoUrl
+          }
+          await global.algoliaUsernameIndex.addObject(object)
+          await db.commitTransaction(transaction)
           resolve({ success: true, userId: result.results.insertId })
         } catch (err) {
+          console.log(err)
+          if (transaction) {
+            await db.rollbackTransaction(transaction)
+          }
           reject(err)
         }
       })

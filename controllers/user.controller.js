@@ -76,3 +76,16 @@ exports.get_user_events = async function(req, res) {
     res.json({ success: false })
   }
 }
+
+exports.searchByUsername = async function(req, res) {
+  const usernameQuery = req.query.username
+  console.log('query: ' + usernameQuery)
+  try {
+    content = await global.algoliaUsernameIndex.search({ query: usernameQuery })
+    users = content.hits    
+    res.json({ success: true, users: users })
+  } catch (err) {
+    console.log(err)
+    res.json({ success: false })
+  }
+}

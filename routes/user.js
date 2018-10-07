@@ -16,4 +16,7 @@ router.get('/profile', passport.authenticate('jwt', { session: false }), user_co
 /* GET get user events, authenticates with JWT */
 router.get('/events', passport.authenticate('jwt', { session: false }), user_controller.get_user_events)
 
+/* GET search users by username */
+router.get('/search', passport.authenticate('jwt', { session: false }), user_controller.searchByUsername)
+
 module.exports = router;
