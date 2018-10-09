@@ -73,7 +73,6 @@ module.exports.deleteEvent = async function(authorId, eventId) {
   deleteEventQuery = `DELETE FROM EVENTS
                       WHERE EVENTS.id = ?`
   values = [eventId]
-  calledGetStream = false
   transaction = null
   try {
     connection = await db.getConnection()

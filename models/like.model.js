@@ -17,7 +17,7 @@ module.exports.getUserLikes = async function(userId) {
   }
 }
 
-module.exports.likePost = async function(userId, eventId, getStreamTime) {
+module.exports.likePost = async function(userId, eventId, getStreamTime, hostId) {
   incrementLikesQuery = `UPDATE EVENTS
                          SET likeCount = likeCount + 1
                          WHERE id = ?`
@@ -43,6 +43,14 @@ module.exports.likePost = async function(userId, eventId, getStreamTime) {
         likeCount: likeCount
       }
     })
+    var notificationFeed = global.streamClient.feed('notification', hostId.toString())
+    await notificationFeed.addActivity({ 
+      actor: userId.toString(),
+      verb: 'like',
+      object: eventId.toString(),
+      foreign_id: 'like:' + userId.toString() + ':' + eventId.toString(),
+      time: getStreamTime
+    })
     await db.commitTransaction(transaction)
     return output.results
   } catch (err) {
@@ -54,7 +62,7 @@ module.exports.likePost = async function(userId, eventId, getStreamTime) {
   }
 }
 
-module.exports.unlikePost = async function(userId, eventId, getStreamTime) {
+module.exports.unlikePost = async function(userId, eventId, getStreamTime, hostId) {
   decrementLikesQuery = `UPDATE EVENTS
                          SET likeCount = likeCount - 1
                          WHERE id = ?`
@@ -82,6 +90,10 @@ module.exports.unlikePost = async function(userId, eventId, getStreamTime) {
       set: {
         likeCount: likeCount
       }
+    })
+    var notificationFeed = global.streamClient.feed('notification', hostId.toString())
+    await notificationFeed.removeActivity({
+      foreignId: 'like:' + userId.toString() + ':' + eventId.toString()
     })
     await db.commitTransaction(transaction)
     return output.results

@@ -17,7 +17,7 @@ module.exports.getUserEventsAttending = async function(userId) {
   }
 }
 
-module.exports.attendEvent = async function(userId, eventId, getStreamTime) {
+module.exports.attendEvent = async function(userId, eventId, getStreamTime, hostId) {
   incrementAttendingQuery = `UPDATE EVENTS
                              SET attendingCount = attendingCount + 1
                              WHERE id = ?`
@@ -43,6 +43,15 @@ module.exports.attendEvent = async function(userId, eventId, getStreamTime) {
         attendingCount: attendingCount
       }
     })
+    var notificationFeed = global.streamClient.feed('notification', hostId.toString())
+    // TODO (Lucas Wotton): How to rollback?
+    await notificationFeed.addActivity({ 
+      actor: userId.toString(),
+      verb: 'attending',
+      object: eventId.toString(),
+      foreign_id: 'attending:' + userId.toString() + ':' + eventId.toString(),
+      time: getStreamTime
+    })
     await db.commitTransaction(transaction)
   } catch (err) {
     console.log(err.message)
@@ -53,7 +62,7 @@ module.exports.attendEvent = async function(userId, eventId, getStreamTime) {
   }
 }
 
-module.exports.unattendEvent = async function(userId, eventId, getStreamTime) {
+module.exports.unattendEvent = async function(userId, eventId, getStreamTime, hostId) {
   decrementAttendingQuery = `UPDATE EVENTS
                              SET attendingCount = attendingCount - 1
                              WHERE id = ?`
@@ -80,6 +89,10 @@ module.exports.unattendEvent = async function(userId, eventId, getStreamTime) {
       set: {
         attendingCount: attendingCount
       }
+    })
+    var notificationFeed = global.streamClient.feed('notification', hostId.toString())
+    await notificationFeed.removeActivity({
+      foreignId: 'attending:' + userId.toString() + ':' + eventId.toString()
     })
     await db.commitTransaction(transaction)
   } catch (err) {

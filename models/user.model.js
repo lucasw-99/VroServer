@@ -12,7 +12,7 @@ module.exports.User = function User(username, password, email, photoUrl, id=null
   this.id = id
 }
 
-module.exports.getUserById = async function(userId, callback) {
+module.exports.getUserById = async function(userId) {
   findUserQuery = "SELECT * FROM USERS WHERE id = ?"
   values = [userId]
   try {

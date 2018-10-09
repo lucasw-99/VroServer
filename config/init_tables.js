@@ -22,6 +22,7 @@ async function createFollowingTable() {
   const createFollowingTableQuery = `CREATE TABLE IF NOT EXISTS FOLLOWERS(
                                      followingUserId int,
                                      followedUserId int,
+                                     getStreamTime VARCHAR(27) NOT NULL,
                                      PRIMARY KEY(followingUserId, followedUserId),
                                      FOREIGN KEY(followingUserId) REFERENCES USERS(id),
                                      FOREIGN KEY(followedUserId) REFERENCES USERS(id) )`

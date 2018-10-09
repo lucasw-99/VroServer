@@ -22,8 +22,9 @@ exports.likePost = async function(req, res) {
     if (!result.success) {
       throw new Error("Event does not exist")
     }
-    removeTimezoneStreamTime = result.event.getStreamTime.replace('Z', '000')
-    result = await Like.likePost(userId, eventId, removeTimezoneStreamTime)
+    postedEvent = result.event
+    removeTimezoneStreamTime = postedEvent.getStreamTime.replace('Z', '000')
+    result = await Like.likePost(userId, eventId, removeTimezoneStreamTime, postedEvent.hostId)
     res.json({ success: true })
   } catch (err) {
     res.json({ success: false, msg: err.message })
@@ -39,8 +40,9 @@ exports.unlikePost = async function(req, res) {
     if (!result.success) {
       throw new Error("Event does not exist")
     }
-    removeTimezoneStreamTime = result.event.getStreamTime.replace('Z', '000')
-    result = await Like.unlikePost(userId, eventId, removeTimezoneStreamTime)
+    postedEvent = result.event
+    removeTimezoneStreamTime = postedEvent.getStreamTime.replace('Z', '000')
+    result = await Like.unlikePost(userId, eventId, removeTimezoneStreamTime, postedEvent.hostId)
     res.json({ success: true })
   } catch (err) {
     console.log('in unlike post catch block')
